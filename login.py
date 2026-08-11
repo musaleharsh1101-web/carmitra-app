@@ -199,7 +199,7 @@ with right:
     if submitted:
         if username == "Harsh" and password == "Harsh@1101":
             st.session_state.logged_in = True
-            st.switch_page("pages/Customer")
+            st.switch_page("pages/Customer.py")
         else:
             st.error("Incorrect username or password.")
             
