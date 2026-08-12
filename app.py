@@ -1,9 +1,9 @@
 import pickle
 from pathlib import Path
-import os
 
 import pandas as pd
 import streamlit as st
+import os
 
 from storage import save_valuation
 
@@ -631,14 +631,15 @@ for column, (popular_brand, tagline, price_label) in zip(
     popular_columns, popular_cars
 ):
     with column:
-        img_path = get_brand_image(popular_brand)
+        import os
 
-# फाईल अस्तित्वात असेल तरच फोटो दाखवा
+img_path = get_brand_image(popular_brand)
+
 if img_path and os.path.exists(img_path):
     st.image(img_path, use_container_width=True)
 else:
     st.warning(f"Image not found for: {popular_brand}")
-        st.markdown(
+    st.markdown(
             f"<div class='car-card-title'>{popular_brand}</div><div class='car-card-meta'>{tagline} · {price_label}</div>",
             unsafe_allow_html=True,
         )
