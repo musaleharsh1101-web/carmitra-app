@@ -1,5 +1,6 @@
 import pickle
 from pathlib import Path
+import os
 
 import pandas as pd
 import streamlit as st
@@ -630,9 +631,7 @@ for column, (popular_brand, tagline, price_label) in zip(
     popular_columns, popular_cars
 ):
     with column:
-        import os
-
-img_path = get_brand_image(popular_brand)
+        img_path = get_brand_image(popular_brand)
 
 # फाईल अस्तित्वात असेल तरच फोटो दाखवा
 if img_path and os.path.exists(img_path):
