@@ -681,7 +681,12 @@ with preview_column:
         f"<div class='brand-preview'><b>{brand} vehicle preview</b><p>{t['brand_preview_desc']}</p></div>",
         unsafe_allow_html=True,
     )
-    st.image(get_brand_image(brand), use_container_width=True)
+    img_path = get_brand_image(brand)
+
+if img_path:
+    st.image(img_path, use_container_width=True)
+else:
+    st.warning(f"Image not found: {brand}")
 
 with st.form("valuation_form"):
     primary, secondary = st.columns(2, gap="large")
