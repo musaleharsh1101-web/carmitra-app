@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="CarMitra | MUSALE MOTORS", page_icon="🚗", layout="wide"
 )
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parent
 
 TRANSLATIONS = {
     "English": {
@@ -285,16 +285,30 @@ TRANSLATIONS = {
 }
 
 
+def find_file(filename):
+    candidates = [
+        BASE_DIR / filename,
+        BASE_DIR.parent / filename,
+        Path.cwd() / filename
+    ]
+    for p in candidates:
+        if os.path.isfile(p):
+            return p
+    return BASE_DIR / filename
+
+
 @st.cache_data(show_spinner=False)
 def load_vehicle_data():
-    data = pd.read_csv(ROOT_DIR / "Cardetails.csv")
+    csv_path = find_file("Cardetails.csv")
+    data = pd.read_csv(csv_path)
     data["name"] = data["name"].astype(str).str.split().str[0]
     return data
 
 
 @st.cache_resource(show_spinner=False)
 def load_model():
-    with open(ROOT_DIR / "model.pkl", "rb") as model_file:
+    model_path = find_file("model.pkl")
+    with open(model_path, "rb") as model_file:
         return pickle.load(model_file)
 
 
@@ -339,9 +353,17 @@ BRAND_IMAGE_IDS = {
 
 def get_brand_image(brand_name):
     image_id = BRAND_IMAGE_IDS.get(brand_name, 99)
-    img_path = ROOT_DIR / "assets" / "brand-cards" / f"brand-{image_id:02d}.jpg"
-    if os.path.isfile(img_path):
-        return img_path
+    filename = f"brand-{image_id:02d}.jpg"
+    candidates = [
+        BASE_DIR / "assets" / "brand-cards" / filename,
+        BASE_DIR.parent / "assets" / "brand-cards" / filename,
+        Path.cwd() / "assets" / "brand-cards" / filename,
+        BASE_DIR / "brand-cards" / filename,
+        Path.cwd() / "brand-cards" / filename
+    ]
+    for img_path in candidates:
+        if os.path.isfile(img_path):
+            return img_path
     return None
 
 
@@ -636,9 +658,9 @@ for column, (popular_brand, tagline, price_label) in zip(
     with column:
         img_path = get_brand_image(popular_brand)
         if img_path:
-            st.image(img_path, use_container_width=True)
+            st.image(str(img_path), use_container_width=True)
         else:
-            st.warning(f"Image not found for: {popular_brand}")
+            st.warning(f"Image not found: {popular_brand}")
         st.markdown(
             f"<div class='car-card-title'>{popular_brand}</div><div class='car-card-meta'>{tagline} · {price_label}</div>",
             unsafe_allow_html=True,
@@ -683,7 +705,7 @@ with preview_column:
     )
     img_path = get_brand_image(brand)
     if img_path:
-        st.image(img_path, use_container_width=True)
+        st.image(str(img_path), use_container_width=True)
     else:
         st.warning(f"Image not found: {brand}")
 
