@@ -1,9 +1,9 @@
 import pickle
 from pathlib import Path
+import os
 
 import pandas as pd
 import streamlit as st
-import os
 
 from storage import save_valuation
 
@@ -337,9 +337,12 @@ BRAND_IMAGE_IDS = {
 }
 
 
-def get_brand_image(brand):
-    image_id = BRAND_IMAGE_IDS.get(brand, 99)
-    return ROOT_DIR / "assets" / "brand-cards" / f"brand-{image_id:02d}.jpg"
+def get_brand_image(brand_name):
+    image_id = BRAND_IMAGE_IDS.get(brand_name, 99)
+    img_path = ROOT_DIR / "assets" / "brand-cards" / f"brand-{image_id:02d}.jpg"
+    if os.path.isfile(img_path):
+        return img_path
+    return None
 
 
 def inject_styles():
@@ -631,15 +634,12 @@ for column, (popular_brand, tagline, price_label) in zip(
     popular_columns, popular_cars
 ):
     with column:
-        import os
-
-img_path = get_brand_image(popular_brand)
-
-if img_path and os.path.exists(img_path):
-    st.image(img_path, use_container_width=True)
-else:
-    st.warning(f"Image not found for: {popular_brand}")
-    st.markdown(
+        img_path = get_brand_image(popular_brand)
+        if img_path:
+            st.image(img_path, use_container_width=True)
+        else:
+            st.warning(f"Image not found for: {popular_brand}")
+        st.markdown(
             f"<div class='car-card-title'>{popular_brand}</div><div class='car-card-meta'>{tagline} · {price_label}</div>",
             unsafe_allow_html=True,
         )
@@ -682,11 +682,10 @@ with preview_column:
         unsafe_allow_html=True,
     )
     img_path = get_brand_image(brand)
-
-if img_path:
-    st.image(img_path, use_container_width=True)
-else:
-    st.warning(f"Image not found: {brand}")
+    if img_path:
+        st.image(img_path, use_container_width=True)
+    else:
+        st.warning(f"Image not found: {brand}")
 
 with st.form("valuation_form"):
     primary, secondary = st.columns(2, gap="large")
@@ -866,88 +865,86 @@ if submitted:
             f"<div class='result-card'><div class='label'>{t['est_market_val']}</div><div class='price'>{money(estimate)}</div><div>{t['based_on_details']}</div></div>",
             unsafe_allow_html=True,
         )
-            # =========================================================
-    # CASH ON DELIVERY OPTION
-    # =========================================================
-    st.markdown(
-        """
-        <div style="
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border: 1px solid #dbe3ef;
-            border-radius: 18px;
-            padding: 1.25rem 1.4rem;
-            margin-top: 1.2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
-        ">
+
+        st.markdown(
+            """
             <div style="
-                display:flex;
-                align-items:center;
-                gap:12px;
-                margin-bottom:6px;
+                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+                border: 1px solid #dbe3ef;
+                border-radius: 18px;
+                padding: 1.25rem 1.4rem;
+                margin-top: 1.2rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
             ">
                 <div style="
-                    width:42px;
-                    height:42px;
-                    border-radius:12px;
-                    background:#ecfdf5;
-                    color:#059669;
                     display:flex;
                     align-items:center;
-                    justify-content:center;
-                    font-size:21px;
+                    gap:12px;
+                    margin-bottom:6px;
                 ">
-                    💵
-                </div>
-
-                <div>
                     <div style="
-                        font-size:1.05rem;
-                        font-weight:800;
-                        color:#0f172a;
+                        width:42px;
+                        height:42px;
+                        border-radius:12px;
+                        background:#ecfdf5;
+                        color:#059669;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:21px;
                     ">
-                        Cash on Delivery
+                        💵
                     </div>
 
-                    <div style="
-                        font-size:.82rem;
-                        color:#64748b;
-                    ">
-                        Pay at the time of vehicle/service delivery
+                    <div>
+                        <div style="
+                            font-size:1.05rem;
+                            font-weight:800;
+                            color:#0f172a;
+                        ">
+                            Cash on Delivery
+                        </div>
+
+                        <div style="
+                            font-size:.82rem;
+                            color:#64748b;
+                        ">
+                            Pay at the time of vehicle/service delivery
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    cod_col1, cod_col2 = st.columns([1.5, 1], gap="medium")
-
-    with cod_col1:
-        cod_selected = st.checkbox(
-            "💵 Select Cash on Delivery",
-            key="cash_on_delivery"
+            """,
+            unsafe_allow_html=True,
         )
 
-    with cod_col2:
-        if cod_selected:
-            st.success("✓ Cash on Delivery selected")
-            st.session_state["payment_method"] = "Cash on Delivery"
-        else:
-            st.session_state["payment_method"] = "Not Selected"
+        cod_col1, cod_col2 = st.columns([1.5, 1], gap="medium")
 
-        lower_bound, upper_bound = estimate * 0.93, estimate * 1.07
-        insight_one, insight_two, insight_three = st.columns(3)
-        insight_one.metric(
-            t['exp_range'], f"{money(lower_bound)} - {money(upper_bound)}"
-        )
-        insight_two.metric(
-            t['conf_score'], t['high'], t['based_on_profile']
-        )
-        insight_three.metric(
-            t['resale_signal'], t['positive'], t['popular_config']
-        )
+        with cod_col1:
+            cod_selected = st.checkbox(
+                "💵 Select Cash on Delivery",
+                key="cash_on_delivery"
+            )
+
+        with cod_col2:
+            if cod_selected:
+                st.success("✓ Cash on Delivery selected")
+                st.session_state["payment_method"] = "Cash on Delivery"
+            else:
+                st.session_state["payment_method"] = "Not Selected"
+
+            lower_bound, upper_bound = estimate * 0.93, estimate * 1.07
+            insight_one, insight_two, insight_three = st.columns(3)
+            insight_one.metric(
+                t['exp_range'], f"{money(lower_bound)} - {money(upper_bound)}"
+            )
+            insight_two.metric(
+                t['conf_score'], t['high'], t['based_on_profile']
+            )
+            insight_three.metric(
+                t['resale_signal'], t['positive'], t['popular_config']
+            )
 
 if "car_price" in st.session_state:
     st.markdown(
